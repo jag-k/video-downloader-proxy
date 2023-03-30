@@ -6,6 +6,8 @@ WORKDIR /app
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV DATA_PATH="/data"
+ENV CONFIG_PATH="/config"
 ENV DATABASE_JSON_PATH="data/database.json"
 
 # Install poetry dependencies

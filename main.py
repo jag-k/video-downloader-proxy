@@ -26,6 +26,7 @@ for path in (
         BASE_PATH / ".env.local",
         CONFIG_PATH / ".env.local",
 ):
+    print(path)
     if path.exists():
         load_dotenv(path)
         print(f"Loaded envs from {path}")
