@@ -85,6 +85,7 @@ jobs:
               echo "Nothing to remove from images"
             docker run \
               -d \
+              -p 62284:62284 \
               --name $CONTAINER_NAME \
               --restart=unless-stopped \
               --volume $CONTAINER_PATH/config:/config \

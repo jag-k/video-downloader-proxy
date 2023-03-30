@@ -4,13 +4,11 @@ from typing import AsyncGenerator
 
 from aiohttp import ClientSession, ClientConnectorError
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, exceptions
+from fastapi import FastAPI, Request, HTTPException, Header, Depends
 from starlette.responses import StreamingResponse
 from tortoise import Tortoise
 
 from models import Proxy, ProxyRequest
-
-app = FastAPI()
 
 BASE_PATH = Path(__file__).resolve().parent
 CONFIG_PATH = Path(os.getenv("CONFIG_PATH", BASE_PATH / "config"))
@@ -26,7 +24,6 @@ for path in (
         BASE_PATH / ".env.local",
         CONFIG_PATH / ".env.local",
 ):
-    print(path)
     if path.exists():
         load_dotenv(path)
         print(f"Loaded envs from {path}")
@@ -37,19 +34,21 @@ else:
 BASE_URL = os.getenv("BASE_URL", None)
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite://{DATA_PATH}/db.sqlite3")
 BEARER_AUTH = os.getenv("BEARER_AUTH", None)
+print(f"{BEARER_AUTH=!r}")
 
 
-@app.middleware("http")
-async def auth(request: Request, call_next):
-    if BEARER_AUTH:
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or auth_header != f"Bearer {BEARER_AUTH}":
-            raise exceptions.HTTPException(
-                status_code=401,
-                detail="Unauthorized",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    return await call_next(request)
+def check_auth(authorization: str = Header(None)):
+    # Check if the Authorization header is present and has the correct value
+    if BEARER_AUTH and authorization != f"Bearer {BEARER_AUTH}":
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return True
+
+
+app = FastAPI(dependencies=[Depends(check_auth)])
 
 
 @app.on_event("startup")
@@ -93,7 +92,7 @@ async def get_file(proxy: ProxyRequest) -> AsyncGenerator[bytes, bytes]:
 async def download(proxy_hash: str) -> StreamingResponse:
     proxy = await Proxy.get_or_none(hash=proxy_hash)
     if not proxy:
-        raise exceptions.HTTPException(404, "Not Found hash")
+        raise HTTPException(404, "Not Found hash")
     try:
         async with ClientSession(
                 headers={"User-Agent": proxy.user_agent}) as session:
@@ -104,9 +103,9 @@ async def download(proxy_hash: str) -> StreamingResponse:
                     media_type=resp.content_type,
                 )
     except ClientConnectorError:
-        raise exceptions.HTTPException(400, "Cannot connect to host")
+        raise HTTPException(400, "Cannot connect to host")
     except Exception as e:
-        raise exceptions.HTTPException(500, str(e))
+        raise HTTPException(500, str(e))
 
     return StreamingResponse(
         get_file(proxy.request),
