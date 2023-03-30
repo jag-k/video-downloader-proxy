@@ -1,0 +1,4 @@
+data/
+config/
+test_*
+.env.test
