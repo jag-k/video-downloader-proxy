@@ -14,8 +14,9 @@ app = FastAPI()
 
 BASE_PATH = Path(__file__).resolve().parent
 CONFIG_PATH = Path(os.getenv("CONFIG_PATH", BASE_PATH / "config"))
+DATA_PATH = Path(os.getenv("DATA_PATH", BASE_PATH / "data"))
 
-for path in (BASE_PATH, CONFIG_PATH):
+for path in (BASE_PATH, CONFIG_PATH, DATA_PATH):
     if not path.exists():
         path.mkdir()
 
@@ -27,10 +28,13 @@ for path in (
 ):
     if path.exists():
         load_dotenv(path)
+        print(f"Loaded envs from {path}")
         break
+else:
+    print("No .env file found")
 
 BASE_URL = os.getenv("BASE_URL", None)
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite://data/db.sqlite3")
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite://{DATA_PATH}/db.sqlite3")
 BEARER_AUTH = os.getenv("BEARER_AUTH", None)
 
 
