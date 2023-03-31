@@ -30,7 +30,13 @@ class Proxy(Model):
             proxy: ProxyRequest,
     ) -> tuple[Self, bool]:
         proxy_hash = md5(
-            '\t'.join((proxy.url, proxy.user_agent)).encode()).hexdigest()
+            '\t'.join(
+                (
+                    proxy.url,
+                    proxy.user_agent or ''
+                )
+            ).strip().encode()
+        ).hexdigest()
         obj, created = await cls.get_or_create(
             hash=proxy_hash,
             defaults={
