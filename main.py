@@ -34,7 +34,6 @@ else:
 BASE_URL = os.getenv("BASE_URL", None)
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite://{DATA_PATH}/db.sqlite3")
 BEARER_AUTH = os.getenv("BEARER_AUTH", None)
-print(f"{BEARER_AUTH=!r}")
 
 
 def check_auth(authorization: str = Header(None)):
@@ -48,7 +47,7 @@ def check_auth(authorization: str = Header(None)):
     return True
 
 
-app = FastAPI(dependencies=[Depends(check_auth)])
+app = FastAPI()
 
 
 @app.on_event("startup")
@@ -66,7 +65,11 @@ async def shutdown():
     await Tortoise.close_connections()
 
 
-@app.post("/", response_description="Url to download")
+@app.post(
+    "/",
+    response_description="Url to download",
+    dependencies=[Depends(check_auth)],
+)
 async def request_url(request: Request, proxy: ProxyRequest) -> str:
     proxy_data, _ = await Proxy.get_or_create_proxy(proxy)
 

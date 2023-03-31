@@ -9,6 +9,7 @@ ENV PYTHONUNBUFFERED=1
 ENV DATA_PATH="/data"
 ENV CONFIG_PATH="/config"
 ENV DATABASE_JSON_PATH="data/database.json"
+ENV ROOT_PATH="/"
 
 # Install poetry dependencies
 COPY poetry.lock pyproject.toml ./
@@ -23,5 +24,5 @@ COPY . .
 EXPOSE 62284
 
 # Run the app
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "62284"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "62284", "--root-path", "$ROOT_PATH"]
 
