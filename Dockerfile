@@ -24,5 +24,5 @@ COPY . .
 EXPOSE 62284
 
 # Run the app
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "62284", "--root-path", "$ROOT_PATH"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "62284", "--root-path", "echo $ROOT_PATH"]
 
